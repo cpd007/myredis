@@ -1,6 +1,38 @@
 package core
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
+
+// RESP decoder functions
+
+// DecodeStringArrays decodes the byte stream for resp protocol
+// into a string array
+func DecodeStringArrays(data []byte) ([]string, error) {
+
+	d, err := Decode(data)
+	if err != nil {
+		return nil, err
+	}
+
+	ds, ok := d.([]any)
+	if !ok {
+		return nil, errors.New("Unsupported arguments entered")
+	}
+
+	stringArr := make([]string, 0)
+
+	for _, v := range ds {
+		str, ok := v.(string)
+		if !ok {
+			return nil, errors.New("Unsupported arguments entered")
+		}
+		stringArr = append(stringArr, str)
+	}
+
+	return stringArr, nil
+}
 
 // Decode decodes the byte stream for resp protocol
 func Decode(data []byte) (any, error) {
@@ -138,4 +170,38 @@ func readNumber(data []byte) (int64, int, error) {
 	}
 
 	return val, pos + 2, nil
+}
+
+// RESP encoder functions
+
+// Encode function encodes the given response value 
+// to RESP response according to its type
+func Encode(value any, isSimple bool) ([]byte, error) {
+
+	switch v := value.(type) {
+	case string:
+		if isSimple {
+			return encodeSimpleString(v)
+		}
+		return encodeBulkString(v)
+	}
+	return []byte{}, nil
+}
+
+// encodeSimpleString encodes a string
+// into RESP's simple string
+func encodeSimpleString(s string) ([]byte, error) {
+
+	encStr := fmt.Sprintf("+%s\r\n", s)
+
+	return []byte(encStr), nil
+}
+
+// encodeBulkString encodes a string
+// into RESP's bulk string
+func encodeBulkString(s string) ([]byte, error) {
+
+	encStr := fmt.Sprintf("$%d\r\n%s\r\n", len(s), s)
+
+	return []byte(encStr), nil
 }

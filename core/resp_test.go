@@ -279,3 +279,89 @@ func Test_readArray(t *testing.T) {
 		})
 	}
 }
+
+func Test_encodeSimpleString(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		s       string
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name:    "non-empty simple string",
+			s:       "PONG",
+			want:    []byte("+PONG\r\n"),
+			wantErr: false,
+		},
+		{
+			name:    "empty simple string",
+			s:       "",
+			want:    []byte("+\r\n"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := encodeSimpleString(tt.s)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("encodeSimpleString() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("encodeSimpleString() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeSimpleString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_encodeBulkString(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		s       string
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name:    "non-empty bulk string",
+			s:       "hello",
+			want:    []byte("$5\r\nhello\r\n"),
+			wantErr: false,
+		},
+		{
+			name:    "non-empty bulk string",
+			s:       "hello world",
+			want:    []byte("$11\r\nhello world\r\n"),
+			wantErr: false,
+		},
+		{
+			name:    "empty bulk string",
+			s:       "",
+			want:    []byte("$0\r\n\r\n"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := encodeBulkString(tt.s)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("encodeBulkString() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("encodeBulkString() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeBulkString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

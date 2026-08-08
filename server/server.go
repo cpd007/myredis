@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/cpd007/myredis/config"
+	"github.com/cpd007/myredis/core"
 )
 
 // use command: <nc localhost 7379> to test.
@@ -33,18 +34,51 @@ func Start() {
 		log.Printf("New connection established from %s\n", conn.RemoteAddr())
 
 		for {
-			buffer := make([]byte, 1024)
-			n, err := conn.Read(buffer)
+			cmd, err := readCommand(conn)
 			if err != nil {
 				log.Printf("disconnecting with: %v", err)
 				conn.Close()
 				break
 			}
 
-			log.Printf("Read from connection: %s", string(buffer[:n]))
-
-			// Write the same data back (Echo)
-			conn.Write(buffer[:n])
+			respond(conn, cmd)
 		}
 	}
+}
+
+func readCommand(c net.Conn) (cmd core.RedisCmd, err error) {
+
+	buffer := make([]byte, 1024)
+	n, err := c.Read(buffer)
+	if err != nil {
+		return cmd, err
+	}
+
+	log.Printf("Read from connection: %s", string(buffer[:n]))
+
+	decodedArray, err := core.DecodeStringArrays(buffer[:n])
+	if err != nil {
+		return cmd, err
+	}
+
+	return core.RedisCmd{
+		Command:   decodedArray[0],
+		Arguments: decodedArray[1:],
+	}, nil
+}
+
+func respond(c net.Conn, cmd core.RedisCmd) {
+
+	data, err := core.EvaluateResponse(cmd)
+	if err != nil {
+		respondWithError(c, err)
+		return
+	}
+
+	c.Write(data)
+}
+
+func respondWithError(c net.Conn, err error) {
+
+	c.Write([]byte(fmt.Sprintf("-%v\r\n", err)))
 }
