@@ -154,6 +154,8 @@ func readArray(data []byte) ([]any, int, error) {
 	return elems, pos, nil
 }
 
+// readNumber parses a RESP integer reply without the indicator.
+// It returns the number, the delta it has decoded till now, and error.
 func readNumber(data []byte) (int64, int, error) {
 	pos := 0
 	val := int64(0)
