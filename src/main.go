@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/cpd007/myredis/config"
+	"github.com/cpd007/myredis/core"
 	"github.com/cpd007/myredis/server"
 )
 
@@ -16,6 +17,7 @@ func setUpFlags() {
 
 func main() {
 	setUpFlags()
+	core.InitializeStore()
 	log.Println("starting the server")
 	server.StartAsyncTCPServer()
 }

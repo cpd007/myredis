@@ -176,7 +176,7 @@ func readNumber(data []byte) (int64, int, error) {
 
 // RESP encoder functions
 
-// Encode function encodes the given response value 
+// Encode function encodes the given response value
 // to RESP response according to its type
 func Encode(value any, isSimple bool) ([]byte, error) {
 
@@ -186,6 +186,8 @@ func Encode(value any, isSimple bool) ([]byte, error) {
 			return encodeSimpleString(v)
 		}
 		return encodeBulkString(v)
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return encodeInteger(v)
 	}
 	return []byte{}, nil
 }
@@ -195,7 +197,6 @@ func Encode(value any, isSimple bool) ([]byte, error) {
 func encodeSimpleString(s string) ([]byte, error) {
 
 	encStr := fmt.Sprintf("+%s\r\n", s)
-
 	return []byte(encStr), nil
 }
 
@@ -204,6 +205,19 @@ func encodeSimpleString(s string) ([]byte, error) {
 func encodeBulkString(s string) ([]byte, error) {
 
 	encStr := fmt.Sprintf("$%d\r\n%s\r\n", len(s), s)
-
 	return []byte(encStr), nil
+}
+
+// encodeInteger encodes an integer
+// into RESP's integer
+func encodeInteger(v any) ([]byte, error) {
+
+	encInt := fmt.Sprintf(":%d\r\n", v)
+	return []byte(encInt), nil
+}
+
+// encodeNil encodes a RESP nil response
+func encodeNil() []byte {
+
+	return []byte("$-1\r\n")
 }

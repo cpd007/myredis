@@ -365,3 +365,49 @@ func Test_encodeBulkString(t *testing.T) {
 		})
 	}
 }
+
+func Test_encodeInteger(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		// Named input parameters for target function.
+		v       any
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name:    "zero integer",
+			v:       0,
+			want:    []byte(":0\r\n"),
+			wantErr: false,
+		},
+		{
+			name:    "positive integer",
+			v:       int64(42),
+			want:    []byte(":42\r\n"),
+			wantErr: false,
+		},
+		{
+			name:    "negative integer",
+			v:       int(-123),
+			want:    []byte(":-123\r\n"),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, gotErr := encodeInteger(tt.v)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("encodeInteger() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("encodeInteger() succeeded unexpectedly")
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeInteger() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
