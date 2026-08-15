@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net"
+	"time"
 
 	"github.com/cpd007/myredis/config"
 	"github.com/cpd007/myredis/core"
@@ -69,6 +70,11 @@ func StartAsyncTCPServer() {
 
 	// wait for events
 	for {
+
+		// auto - deletion
+		if time.Now().After(config.CronCfg.LastExecutionTime.Add(config.CronCfg.CronFrequency)) {
+			core.DeleteExpiredKeys()
+		}
 
 		n, err := unix.Kevent(kq, nil, events, nil)
 		if err != nil {

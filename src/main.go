@@ -15,6 +15,10 @@ func setUpFlags() {
 	flag.Parse()
 }
 
+func setUpCron() {
+	config.SetUpCronConfig()
+}
+
 func main() {
 	setUpFlags()
 	core.InitializeStore()

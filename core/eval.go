@@ -23,6 +23,10 @@ func EvaluateResponse(redisCmd RedisCmd) ([]byte, error) {
 		return evaluateGET(args)
 	case "TTL":
 		return evaluateTTL(args)
+	case "DEL":
+		return evaluateDEL(args)
+	case "EXPIRE":
+		return evaluateEXPIRE(args)
 	default:
 		return evaluatePING(args)
 	}
@@ -104,6 +108,7 @@ func evaluateGET(args []string) ([]byte, error) {
 	}
 	// key expired, no key present
 	if obj.ExpiresAt > 0 && time.Now().UnixMilli() > obj.ExpiresAt {
+		// return nil RESP
 		return encodeNil(), nil
 	}
 
@@ -133,4 +138,40 @@ func evaluateTTL(args []string) ([]byte, error) {
 	}
 
 	return Encode((obj.ExpiresAt-time.Now().UnixMilli())/1000, false)
+}
+
+func evaluateDEL(args []string) ([]byte, error) {
+
+	deletedCount := 0
+	for i := range args {
+
+		if ok := Del(args[i]); ok {
+			deletedCount++
+		}
+	}
+
+	return Encode(deletedCount, false)
+}
+
+func evaluateEXPIRE(args []string) ([]byte, error) {
+
+	if len(args) < 2 {
+		return nil, errors.New("ERR wrong number of arguments for the 'expire' command")
+	}
+
+	k := args[0]
+	expInSec, err := strconv.ParseUint(args[1], 10, 32)
+	if err != nil {
+		return nil, errors.New("ERR value is not an unsigned integer or out of range")
+	}
+
+	obj := Get(k)
+	// object doesn't exist or expired
+	if obj == nil {
+		return Encode(0, false)
+	}
+
+	obj.ExpiresAt = time.Now().UnixMilli() + int64(expInSec)*1000
+
+	return Encode(1, false)
 }
