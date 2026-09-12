@@ -1,6 +1,10 @@
 package core
 
-import "time"
+import (
+	"time"
+
+	"github.com/cpd007/myredis/config"
+)
 
 var store map[string]*Obj
 
@@ -27,6 +31,9 @@ func NewObj(value any, exDurationMs int64) *Obj {
 }
 
 func Put(k string, v *Obj) {
+	if _, exists := store[k]; !exists && len(store) >= config.EvictionCfg.MaxKeyLimit {
+		evict()
+	}
 	store[k] = v
 }
 

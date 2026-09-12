@@ -1,13 +1,17 @@
 package config
 
-import "time"
+import (
+	"time"
 
-type EchoServerConfig struct {
+	"github.com/cpd007/myredis/constants"
+)
+
+type RedisServerConfig struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 }
 
-var Config EchoServerConfig
+var Config RedisServerConfig
 
 type CronConfig struct {
 	CronFrequency     time.Duration
@@ -16,7 +20,21 @@ type CronConfig struct {
 
 var CronCfg CronConfig
 
-func SetUpCronConfig() {
+func SetupCronConfig() {
 	CronCfg.CronFrequency = time.Duration(time.Second.Milliseconds())
 	CronCfg.LastExecutionTime = time.Now()
+}
+
+type EvictionConfig struct {
+	EvictionStrategy constants.EvictionStrategy
+	MaxKeyLimit      int
+}
+
+var EvictionCfg EvictionConfig
+
+func SetupEvictionConfig() {
+	EvictionCfg = EvictionConfig{
+		EvictionStrategy: constants.EvictFist,
+		MaxKeyLimit:      5,
+	}
 }

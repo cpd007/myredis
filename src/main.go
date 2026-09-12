@@ -9,18 +9,24 @@ import (
 	"github.com/cpd007/myredis/server"
 )
 
-func setUpFlags() {
+func setupFlags() {
 	flag.StringVar(&config.Config.Host, "host", "0.0.0.0", "Host for redis server")
 	flag.IntVar(&config.Config.Port, "port", 7379, "Port for redis server")
 	flag.Parse()
 }
 
-func setUpCron() {
-	config.SetUpCronConfig()
+func setupCron() {
+	config.SetupCronConfig()
+}
+
+func setupEviction() {
+	config.SetupEvictionConfig()
 }
 
 func main() {
-	setUpFlags()
+	setupFlags()
+	setupCron()
+	setupEviction()
 	core.InitializeStore()
 	log.Println("starting the server")
 	server.StartAsyncTCPServer()
