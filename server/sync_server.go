@@ -34,7 +34,7 @@ func StartSyncTCPServer() {
 		log.Printf("New connection established from %s\n", conn.RemoteAddr())
 
 		for {
-			cmd, err := readCommand(conn)
+			cmds, err := readCommands(conn)
 			if err != nil {
 				log.Printf("disconnecting with: %v", err)
 				conn.Close()
@@ -44,7 +44,7 @@ func StartSyncTCPServer() {
 				}
 			}
 
-			respond(conn, cmd)
+			respond(conn, cmds)
 		}
 	}
 }

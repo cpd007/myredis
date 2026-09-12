@@ -7,42 +7,25 @@ import (
 
 // RESP decoder functions
 
-// DecodeStringArrays decodes the byte stream for resp protocol
-// into a string array
-func DecodeStringArrays(data []byte) ([]string, error) {
-
-	d, err := Decode(data)
-	if err != nil {
-		return nil, err
-	}
-
-	ds, ok := d.([]any)
-	if !ok {
-		return nil, errors.New("Unsupported arguments entered")
-	}
-
-	stringArr := make([]string, 0)
-
-	for _, v := range ds {
-		str, ok := v.(string)
-		if !ok {
-			return nil, errors.New("Unsupported arguments entered")
-		}
-		stringArr = append(stringArr, str)
-	}
-
-	return stringArr, nil
-}
-
 // Decode decodes the byte stream for resp protocol
-func Decode(data []byte) (any, error) {
+func Decode(data []byte) ([]any, error) {
 
 	if len(data) == 0 {
 		return nil, errors.New("Empty data received.")
 	}
 
-	value, _, err := decodeOne(data)
-	return value, err
+	index := 0
+	var values []any
+	for index < len(data) {
+		v, delta, err := decodeOne(data[index:])
+		if err != nil {
+			return nil, err
+		}
+
+		index += delta
+		values = append(values, v)
+	}
+	return values, nil
 }
 
 // decodeOne decodes data one at a time and returns

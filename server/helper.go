@@ -1,14 +1,17 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/cpd007/myredis/core"
+	"github.com/cpd007/myredis/helper"
 )
 
-func readCommand(c io.ReadWriter) (cmd core.RedisCmd, err error) {
+func readCommands(c io.ReadWriter) (cmd []core.RedisCmd, err error) {
 
 	buffer := make([]byte, 1024)
 	n, err := c.Read(buffer)
@@ -18,29 +21,48 @@ func readCommand(c io.ReadWriter) (cmd core.RedisCmd, err error) {
 
 	log.Printf("Read from connection: %s", string(buffer[:n]))
 
-	decodedArray, err := core.DecodeStringArrays(buffer[:n])
+	decodedValues, err := core.Decode(buffer[:n])
 	if err != nil {
 		return cmd, err
 	}
 
-	return core.RedisCmd{
-		Command:   decodedArray[0],
-		Arguments: decodedArray[1:],
-	}, nil
-}
+	cmds := []core.RedisCmd{}
 
-func respond(c io.ReadWriter, cmd core.RedisCmd) {
+	for i := range decodedValues {
 
-	data, err := core.EvaluateResponse(cmd)
-	if err != nil {
-		respondWithError(c, err)
-		return
+		decodedStringArray, err := helper.ToStringArray(decodedValues[i])
+		if err != nil {
+			log.Println(err)
+			return nil, errors.New("Invalid request")
+		}
+
+		cmds = append(cmds, core.RedisCmd{
+			Command:   strings.ToUpper(decodedStringArray[0]),
+			Arguments: decodedStringArray[1:],
+		})
 	}
 
-	c.Write(data)
+	return cmds, nil
 }
 
-func respondWithError(c io.ReadWriter, err error) {
+func respond(c io.ReadWriter, cmds []core.RedisCmd) {
 
-	c.Write([]byte(fmt.Sprintf("-%v\r\n", err)))
+	var response []byte
+
+	for i := range cmds {
+
+		data, err := core.EvaluateResponse(cmds[i])
+		if err != nil {
+			data = respondWithError(err)
+		}
+
+		response = append(response, data...)
+	}
+
+	c.Write(response)
+}
+
+func respondWithError(err error) []byte {
+
+	return fmt.Appendf(nil, "-%v\r\n", err)
 }

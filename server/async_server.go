@@ -107,7 +107,7 @@ func StartAsyncTCPServer() {
 			} else {
 				// client wants to send data
 				fdComm := core.FdComm{Fd: int(events[i].Ident)}
-				cmd, err := readCommand(fdComm)
+				cmds, err := readCommands(fdComm)
 				if err != nil {
 					log.Printf("disconnecting with: %v", err)
 					unix.Close(fdComm.Fd)
@@ -115,7 +115,7 @@ func StartAsyncTCPServer() {
 					continue
 				}
 
-				respond(fdComm, cmd)
+				respond(fdComm, cmds)
 			}
 		}
 	}
