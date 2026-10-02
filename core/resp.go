@@ -180,7 +180,7 @@ func Encode(value any, isSimple bool) ([]byte, error) {
 			}
 			b = append(b, encodedString...)
 		}
-		return fmt.Appendf(nil, "*%d\r\n%s", len(b), b), nil
+		return fmt.Appendf(nil, "*%d\r\n%s", len(v), b), nil
 	}
 	return []byte{}, nil
 }
