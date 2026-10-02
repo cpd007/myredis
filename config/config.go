@@ -6,6 +6,8 @@ import (
 	"github.com/cpd007/myredis/constants"
 )
 
+var AOFFile = "./my-redis.aof"
+
 type RedisServerConfig struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`

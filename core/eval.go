@@ -27,6 +27,8 @@ func EvaluateResponse(redisCmd RedisCmd) ([]byte, error) {
 		return evaluateDEL(args)
 	case "EXPIRE":
 		return evaluateEXPIRE(args)
+	case "BGREWRITEAOF":
+		return evaluateBGREWRITEAOF()
 	default:
 		return evaluatePING(args)
 	}
@@ -174,4 +176,10 @@ func evaluateEXPIRE(args []string) ([]byte, error) {
 	obj.ExpiresAt = time.Now().UnixMilli() + int64(expInSec)*1000
 
 	return Encode(1, false)
+}
+
+// TODO: make it async
+func evaluateBGREWRITEAOF() ([]byte, error) {
+	DumpAllAOF()
+	return Encode("OK", true)
 }

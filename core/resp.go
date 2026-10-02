@@ -171,6 +171,16 @@ func Encode(value any, isSimple bool) ([]byte, error) {
 		return encodeBulkString(v)
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		return encodeInteger(v)
+	case []string:
+		var b []byte
+		for _, val := range v {
+			encodedString, err := encodeBulkString(val)
+			if err != nil {
+				return b, err
+			}
+			b = append(b, encodedString...)
+		}
+		return fmt.Appendf(nil, "*%d\r\n%s", len(b), b), nil
 	}
 	return []byte{}, nil
 }
